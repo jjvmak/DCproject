@@ -1,8 +1,12 @@
 
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -123,14 +127,43 @@ public class Connections {
 				System.out.println("heppis");
 				output.writeObject(portNumber);
 				output.flush();
+				openSocket(portNumber);
 				portNumber++;
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}	
+	}
+	public void openSocket(int port){
+		String hostName = "localhost";
+		int p = port; 
+		Socket ss;
+		int str = 0;
+		try {
+		    ss = new Socket(hostName, p);
+		    ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
+		    ObjectOutputStream oos = new ObjectOutputStream(ss.getOutputStream());
+		    str = 1;
+		    oos.writeObject(str);
+
+		    while ((str = (int) ois.readObject()) != 0) {
+		      System.out.println(str);
+		      oos.writeObject(5);
+
+		      if (str == 0)
+		        break;
+		    }
+
+		    ois.close();
+		    oos.close();
+		    ss.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
+		
 	}
-	
 }
