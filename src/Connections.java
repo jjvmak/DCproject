@@ -123,11 +123,11 @@ public class Connections {
 		int portNumber = 7778;
 		for (int i = 0; i < streamInput; i++) {
 			try {
+				openSocket(portNumber);
 				output.flush();
 				System.out.println("heppis");
 				output.writeObject(portNumber);
 				output.flush();
-				openSocket(portNumber);
 				portNumber++;
 				
 			} catch (IOException e) {
@@ -137,12 +137,12 @@ public class Connections {
 		}	
 	}
 	public void openSocket(int port){
-		String hostName = "localhost";
+		//String hostName = "localhost";
 		int p = port; 
 		Socket ss;
 		int str = 0;
 		try {
-		    ss = new Socket(hostName, p);
+		    ss = new Socket(InetAddress.getByName("localhost"), p);
 		    ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
 		    ObjectOutputStream oos = new ObjectOutputStream(ss.getOutputStream());
 		    str = 1;
