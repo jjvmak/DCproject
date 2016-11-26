@@ -1,19 +1,13 @@
 
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 
 public class Connections {
 
@@ -24,45 +18,70 @@ public class Connections {
 	static byte[] data;
 	static Socket cs;
 	static ServerSocket ss;
-	static ObjectOutput output;
+	static ObjectOutputStream output;
 	static ObjectInputStream input;
 	static String portNumber;
 	static int streamInput = 0;
+	static Summarizer[] summarize;
+	static Thread[] threads;
+	
 	
 	public void init() throws IOException {
 		try {
 			targetAdd = InetAddress.getLocalHost();
 			targetPort = 3126;
-			portNumber = "7777";
+			portNumber = "3127";
 			data = portNumber.getBytes();
 			packet = new DatagramPacket(data, data.length, targetAdd, 3126);
 			datagramSocket = new DatagramSocket();
-			ss = new ServerSocket(7777);
+			ss = new ServerSocket(3127);
 	
 			do {
 				System.out.println("noni");
 				sendDatagram();
+				ss.setSoTimeout(5000);
 				acceptTCP();
-				setupStreams();
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				input = new ObjectInputStream(cs.getInputStream());
+				output = new ObjectOutputStream(cs.getOutputStream());
+				output.flush();
+				
 			} while (!isConnected());
-			
+
 			readInput();
-			sendPortNumbers();
+			summarizerService();
+			System.out.println("Oletko t‰‰ll‰");
+			close();
 		
 
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 	}
-	
+	/* **********************************************************************
+	 * Joonan ‰l‰ k‰yt‰ 
+	 */
+	private static void close()throws Exception{
+		System.out.println("Closing application");
+		if (threads != null){
+			for (int i=0; i<threads.length; i++){
+				if (threads[i].isAlive()) threads[i].interrupt();
+			}
+		}
+		ss.close();
+		datagramSocket.close();
+		if (cs != null) cs.close();
+		if (input != null) input.close();
+		if (output != null) output.close();
+		System.exit(0);
+	}
+	/*
+	 * **********************************************************************
+	 */
 	public void sendDatagram() {
 		try {
 			System.out.println(packet);
@@ -81,19 +100,7 @@ public class Connections {
 			e.printStackTrace();
 		}
 	}
-	
-	public void setupStreams() {
-		try {
-			output = new ObjectOutputStream(cs.getOutputStream());
-			output.flush();
-			input = new ObjectInputStream(cs.getInputStream());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-	
+
 	public boolean isConnected() {
 		if (cs.isConnected()) {
 			return true;
@@ -104,6 +111,7 @@ public class Connections {
 	}
 	
 	public void readInput() {
+		int tryTimes = 0;
 		try {
 			streamInput = input.readInt();
 			System.out.println(streamInput);
@@ -113,57 +121,29 @@ public class Connections {
 			e.printStackTrace();
 		}
 		
-		if (streamInput == 0) {
-			
+		if ((streamInput < 2 || streamInput > 10 ) && tryTimes <= 5){
+			tryTimes++;
 			readInput();
 		}
 	}
-	
-	public void sendPortNumbers() {
-		int portNumber = 7778;
-		for (int i = 0; i < streamInput; i++) {
-			try {
-				openSocket(portNumber);
+
+	public static void summarizerService(){
+		summarize = new Summarizer[streamInput];
+		threads = new Thread[streamInput];
+		try {
+			
+			for(int i=0; i<streamInput; i++){
+				summarize[i] = new Summarizer(3128+i);
+				threads[i] = summarize[i];
+				threads[i].start();
+				output.writeInt(summarize[i].getPort());
 				output.flush();
-				System.out.println("heppis");
-				output.writeObject(portNumber);
-				output.flush();
-				portNumber++;
-				
-			} catch (IOException e) {
+			}
+		System.out.println("K‰nniss‰: " + streamInput + " summauspalvelinta." );
+		} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-		}	
-	}
-	public void openSocket(int port){
-		//String hostName = "localhost";
-		int p = port; 
-		Socket ss;
-		int str = 0;
-		try {
-		    ss = new Socket(InetAddress.getByName("localhost"), p);
-		    ObjectInputStream ois = new ObjectInputStream(ss.getInputStream());
-		    ObjectOutputStream oos = new ObjectOutputStream(ss.getOutputStream());
-		    str = 1;
-		    oos.writeObject(str);
-
-		    while ((str = (int) ois.readObject()) != 0) {
-		      System.out.println(str);
-		      oos.writeObject(5);
-
-		      if (str == 0)
-		        break;
-		    }
-
-		    ois.close();
-		    oos.close();
-		    ss.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
-		
-	}
+			
+		}
 }
