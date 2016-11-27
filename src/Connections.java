@@ -24,8 +24,8 @@ public class Connections {
 	static int streamInput = 0;
 	static Summarizer[] summarize;
 	static Thread[] threads;
-	
-	
+	static int connectionAttemp = 1;
+
 	public void init() throws IOException {
 		try {
 			targetAdd = InetAddress.getLocalHost();
@@ -35,23 +35,29 @@ public class Connections {
 			packet = new DatagramPacket(data, data.length, targetAdd, 3126);
 			datagramSocket = new DatagramSocket();
 			ss = new ServerSocket(3127);
-	
+
 			do {
-				System.out.println("noni");
+				
+				if (connectionAttemp > 5) {
+					System.exit(0);
+				}
+				
+				System.out.println("Sending datagram packet to server. Attemp: "+connectionAttemp);
 				sendDatagram();
 				ss.setSoTimeout(5000);
 				acceptTCP();
 				input = new ObjectInputStream(cs.getInputStream());
 				output = new ObjectOutputStream(cs.getOutputStream());
 				output.flush();
-				
+				connectionAttemp++;
+
 			} while (!isConnected());
 
 			readInput();
 			summarizerService();
 			System.out.println("Oletko t‰‰ll‰");
 			close();
-		
+
 
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -60,7 +66,7 @@ public class Connections {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
 	/* **********************************************************************
 	 * Joonan ‰l‰ k‰yt‰ 
@@ -91,7 +97,7 @@ public class Connections {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void acceptTCP() {
 		try {
 			cs = ss.accept();
@@ -109,21 +115,33 @@ public class Connections {
 			return false;
 		}
 	}
-	
+
 	public void readInput() {
+		//T‰lle vois tehd‰ ehk‰ jonkun loopin, ett‰ t‰st‰ sais j‰rkev‰mm‰n.
 		int tryTimes = 0;
 		try {
 			streamInput = input.readInt();
-			System.out.println(streamInput);
-			
+			System.out.println("Reading input. Received: "+streamInput);
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		if ((streamInput < 2 || streamInput > 10 ) && tryTimes <= 5){
 			tryTimes++;
 			readInput();
+		}
+		
+		if (tryTimes >= 5) {
+			try {
+				output.writeInt(-1);
+				close();
+				System.exit(0);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -131,7 +149,7 @@ public class Connections {
 		summarize = new Summarizer[streamInput];
 		threads = new Thread[streamInput];
 		try {
-			
+
 			for(int i=0; i<streamInput; i++){
 				summarize[i] = new Summarizer(3128+i);
 				threads[i] = summarize[i];
@@ -139,11 +157,11 @@ public class Connections {
 				output.writeInt(summarize[i].getPort());
 				output.flush();
 			}
-		System.out.println("K‰nniss‰: " + streamInput + " summauspalvelinta." );
+			System.out.println("K‰nniss‰: " + streamInput + " summauspalvelinta." );
 		} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-			
-		}
+
+	}
 }
