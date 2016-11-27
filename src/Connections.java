@@ -22,7 +22,7 @@ public class Connections {
 	static ObjectInputStream input;
 	static String portNumber;
 	static int streamInput = 0;
-	static Summarizer[] summarize;
+	static Summarizer[] summarizes;
 	static Thread[] threads;
 	static int connectionAttemp = 1;
 
@@ -37,11 +37,11 @@ public class Connections {
 			ss = new ServerSocket(3127);
 
 			do {
-				
+
 				if (connectionAttemp > 5) {
 					System.exit(0);
 				}
-				
+
 				System.out.println("Sending datagram packet to server. Attemp: "+connectionAttemp);
 				sendDatagram();
 				ss.setSoTimeout(5000);
@@ -55,8 +55,7 @@ public class Connections {
 
 			readInput();
 			summarizerService();
-			System.out.println("Oletko t‰‰ll‰");
-			close();
+			closeConnections();
 
 
 		} catch (UnknownHostException e) {
@@ -68,26 +67,7 @@ public class Connections {
 		}
 
 	}
-	/* **********************************************************************
-	 * Joonan ‰l‰ k‰yt‰ 
-	 */
-	private static void close()throws Exception{
-		System.out.println("Closing application");
-		if (threads != null){
-			for (int i=0; i<threads.length; i++){
-				if (threads[i].isAlive()) threads[i].interrupt();
-			}
-		}
-		ss.close();
-		datagramSocket.close();
-		if (cs != null) cs.close();
-		if (input != null) input.close();
-		if (output != null) output.close();
-		System.exit(0);
-	}
-	/*
-	 * **********************************************************************
-	 */
+
 	public void sendDatagram() {
 		try {
 			System.out.println(packet);
@@ -132,11 +112,11 @@ public class Connections {
 			tryTimes++;
 			readInput();
 		}
-		
+
 		if (tryTimes >= 5) {
 			try {
 				output.writeInt(-1);
-				close();
+				closeConnections();
 				System.exit(0);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -146,19 +126,33 @@ public class Connections {
 	}
 
 	public static void summarizerService(){
-		summarize = new Summarizer[streamInput];
+		summarizes = new Summarizer[streamInput];
 		threads = new Thread[streamInput];
 		try {
 
 			for(int i=0; i<streamInput; i++){
-				summarize[i] = new Summarizer(3128+i);
-				threads[i] = summarize[i];
+				summarizes[i] = new Summarizer(3128+i);
+				threads[i] = summarizes[i];
 				threads[i].start();
-				output.writeInt(summarize[i].getPort());
+				output.writeInt(summarizes[i].getPort());
 				output.flush();
 			}
-			System.out.println("K‰nniss‰: " + streamInput + " summauspalvelinta." );
+			System.out.println("Started: " + streamInput + " summarizers." );
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public static void closeConnections() {
+		try {
+			for (int i = 0; i < threads.length; i++) {
+				threads[i].interrupt();
+			}
+			datagramSocket.close();
+			ss.close();
+			cs.close();
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
