@@ -1,7 +1,9 @@
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -18,6 +20,8 @@ public class Connections {
 	static byte[] data;
 	static Socket cs;
 	static ServerSocket ss;
+	static OutputStream oS;
+	static InputStream iS;	
 	static ObjectOutputStream output;
 	static ObjectInputStream input;
 	static String portNumber;
@@ -46,16 +50,15 @@ public class Connections {
 				sendDatagram();
 				ss.setSoTimeout(5000);
 				acceptTCP();
-				input = new ObjectInputStream(cs.getInputStream());
-				output = new ObjectOutputStream(cs.getOutputStream());
-				output.flush();
+				setupStreams();
 				connectionAttemp++;
 
 			} while (!isConnected());
 
 			readInput();
 			summarizerService();
-			closeConnections();
+			listener();
+			//closeConnections();
 
 
 		} catch (UnknownHostException e) {
@@ -72,6 +75,18 @@ public class Connections {
 		try {
 			System.out.println(packet);
 			datagramSocket.send(packet);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public void setupStreams(){
+		try {
+			 iS = cs.getInputStream();
+			 oS = cs.getOutputStream();
+			 output = new ObjectOutputStream(oS);
+			 input = new ObjectInputStream(iS);
+			 output.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -118,11 +133,40 @@ public class Connections {
 			try {
 				output.writeInt(-1);
 				closeConnections();
-				System.exit(0);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+	}
+	
+/*
+ * T‰‰ metodi on viallinen, mutta output.writeInt("t‰nne setti‰ niin toimii")
+ */
+	public static void listener(){
+		int num = streamInput;
+		try {
+			if(num == 0){
+				closeConnections();
+			}
+			else if(num == 1){
+				System.out.println("tuli numero yks");
+				output.writeInt(2);
+				output.flush();
+			}
+			else if(num == 2){
+				System.out.println("tuli numero kaksi");
+				output.writeInt(2);
+				output.flush();
+			}
+			else if(num == 3){
+				System.out.println("tuli numero kolme");
+				output.writeInt(2);
+				output.flush();
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -137,6 +181,8 @@ public class Connections {
 				threads[i].start();
 				output.writeInt(summarizes[i].getPort());
 				output.flush();
+				System.out.println("m‰‰r‰: " +summarizes[i].getAmount());
+				System.out.println("summa: " + summarizes[i].getSum());
 			}
 			System.out.println("Started: " + streamInput + " summarizers." );
 		} catch (IOException e) {
@@ -153,6 +199,7 @@ public class Connections {
 			datagramSocket.close();
 			ss.close();
 			cs.close();
+			System.exit(0);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

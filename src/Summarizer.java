@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,6 +13,7 @@ public class Summarizer extends Thread{
 	private int calculateSum = 0;
 	private int numberSum = 0;
 	private int temp;
+	private static InputStream iS;
 
 	public Summarizer(int port){
 		this.port = port;
@@ -27,13 +29,19 @@ public class Summarizer extends Thread{
 	public int getPort(){
 		return port;
 	}
-
+	public int getSum(){
+		return calculateSum;
+	}
+	public int getAmount(){
+		return numberSum;
+	}
 	@Override
 	public void run(){
 		try{
 			ss = new ServerSocket(port);
 			cs = ss.accept();
-			input = new ObjectInputStream(cs.getInputStream());
+			iS = cs.getInputStream();
+			input = new ObjectInputStream(iS);
 		}
 		catch (IOException e){
 			System.err.println(e.getMessage());
@@ -41,7 +49,7 @@ public class Summarizer extends Thread{
 		}
 		do {
 			try {
-				System.out.println("lasketaan");
+				System.out.println("numero: " + input.readInt());
 				temp = input.readInt();
 				if (temp == 0){
 					break;
