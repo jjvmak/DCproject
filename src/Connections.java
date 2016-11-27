@@ -97,23 +97,24 @@ public class Connections {
 	}
 
 	public void readInput() {
-		//Tälle vois tehdä ehkä jonkun loopin, että tästä sais järkevämmän.
-		int tryTimes = 0;
-		try {
-			streamInput = input.readInt();
-			System.out.println("Reading input. Received: "+streamInput);
+		
+		int readInputAttemps = 0;
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		do {
+			try {
+				streamInput = input.readInt();
+				System.out.println("Reading input. Received: "+streamInput);
 
-		if ((streamInput < 2 || streamInput > 10 ) && tryTimes <= 5){
-			tryTimes++;
-			readInput();
-		}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			readInputAttemps++;
 
-		if (tryTimes >= 5) {
+		} while ((streamInput < 2 || streamInput > 10) && readInputAttemps <= 5);
+
+		if (readInputAttemps >= 5) {
 			try {
 				output.writeInt(-1);
 				closeConnections();
