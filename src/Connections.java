@@ -226,7 +226,7 @@ public class Connections {
 		for (int i = 0; i < summarizers.length; i++) {
 			if (summarizers[i].getSum() > largest) {
 				largest = summarizers[i].getSum();
-				maxIndex = i;
+				maxIndex = i+1;
 			}
 		}
 		return maxIndex;
