@@ -7,13 +7,13 @@ import java.net.Socket;
 public class Summarizer extends Thread{
 
 	private int port;
-	private static ServerSocket ss;
-	private static Socket cs;
+	private ServerSocket ss;
+	private Socket cs;
 	private ObjectInputStream input;
 	private int calculateSum = 0;
 	private int numberSum = 0;
 	private int temp;
-	private static InputStream is;
+	private InputStream is;
 
 	public Summarizer(int port){
 		this.port = port;
@@ -50,18 +50,18 @@ public class Summarizer extends Thread{
 		do {
 			try {
 				temp = input.readInt();
-				//System.out.println("summarizer received: "+temp);
 				if (temp == 0){
 					break;
 				}
 				numberSum++;
 				calculateSum += temp;
 				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
+			} catch (Exception e) {
+				System.out.println("Tulee tämä run() metodista");
 				e.printStackTrace();
+				System.exit(0);
 			}
-		} while (isConnected());
+		} while (true);
 		try {
 			cs.close();
 			ss.close();

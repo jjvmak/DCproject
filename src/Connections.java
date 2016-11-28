@@ -10,6 +10,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 public class Connections {
@@ -112,36 +113,22 @@ public class Connections {
 		}
 	}
 
-	public void readInput() {
-
-		int readInputAttemps = 0;
-
-		do {
+	public void readInput() throws Exception{
 			try {
 				streamInput = input.readInt();
 				System.out.println("Reading input. Received: "+streamInput);
 
-			} catch (IOException e) {
+			}catch (SocketTimeoutException e){
+				output.writeInt(-1); 
+				output.flush();
+				System.exit(0);		
+			}catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-			readInputAttemps++;
-/*
- * T‰m‰ rikki pit‰isi olla jos ei vastaa 5 sekunnin kuluessa niin l‰hett‰‰ -1 ja shutdown
- * Nyt se l‰hett‰‰ -1 aina joka viide numero :D
- */
-		} while ((streamInput < 2 || streamInput > 10) && readInputAttemps <= 5);
-
-		if (readInputAttemps >= 5) {
-			try {
-				output.writeInt(-1);
-				closeConnections();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		 if(streamInput < 2 || streamInput > 10){
+			System.exit(0);
+		 }
 	}
 
 	/*
@@ -158,16 +145,22 @@ public class Connections {
 				}
 				else if(num == 1){
 					System.out.println("Reading total sum from summarizers");
+					System.out.println("koko summa: " + readTotalSum());
+					System.out.println();
 					output.writeInt(readTotalSum());
 					output.flush();
 				}
 				else if(num == 2){
 					System.out.println("Reading largest sums from summarizers");
+					System.out.println("Koko indeksi m‰‰r‰: " + readMaxIndex());
+					System.out.println();
 					output.writeInt(readMaxIndex());
 					output.flush();
 				}
 				else if(num == 3){
 					System.out.println("Reading amount of received integers");
+					System.out.println("Suurin summa summarizer: " + readIntegerAmount());
+					System.out.println();
 					output.writeInt(readIntegerAmount());
 					output.flush();
 				}
@@ -194,6 +187,8 @@ public class Connections {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.out.println("Tuli t‰‰");
+			System.exit(0);
 		}
 	}
 
