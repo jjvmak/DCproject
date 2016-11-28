@@ -26,7 +26,7 @@ public class Connections {
 	static ObjectInputStream input;
 	static String portNumber;
 	static int streamInput = 0;
-	static Summarizer[] summarizes;
+	static Summarizer[] summarizers;
 	static Thread[] threads;
 	static int connectionAttemp = 1;
 
@@ -82,11 +82,11 @@ public class Connections {
 	}
 	public void setupStreams(){
 		try {
-			 iS = cs.getInputStream();
-			 oS = cs.getOutputStream();
-			 output = new ObjectOutputStream(oS);
-			 input = new ObjectInputStream(iS);
-			 output.flush();
+			iS = cs.getInputStream();
+			oS = cs.getOutputStream();
+			output = new ObjectOutputStream(oS);
+			input = new ObjectInputStream(iS);
+			output.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -112,7 +112,7 @@ public class Connections {
 	}
 
 	public void readInput() {
-		
+
 		int readInputAttemps = 0;
 
 		do {
@@ -124,7 +124,7 @@ public class Connections {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			readInputAttemps++;
 
 		} while ((streamInput < 2 || streamInput > 10) && readInputAttemps <= 5);
@@ -139,50 +139,53 @@ public class Connections {
 			}
 		}
 	}
-	
-/*
- * Tää metodi on viallinen, mutta output.writeInt("tänne settiä niin toimii")
- */
+
+	/*
+	 * Tää metodi on viallinen, mutta output.writeInt("tänne settiä niin toimii")
+	 */
 	public static void listener(){
-		int num = streamInput;
-		try {
-			if(num == 0){
-				closeConnections();
+		while (true) {
+			try {
+				int num = input.readInt();
+
+				if(num == 0){
+					closeConnections();
+				}
+				else if(num == 1){
+					System.out.println("Reading total sum from summarizers");
+					output.writeInt(readTotalSum());
+					output.flush();
+				}
+				else if(num == 2){
+					System.out.println("Reading largest sums from summarizers");
+					output.writeInt(readLargestSum());
+					output.flush();
+				}
+				else if(num == 3){
+					System.out.println("Reading amount of received integers");
+					output.writeInt(readIntegerAmount());
+					output.flush();
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			else if(num == 1){
-				System.out.println("tuli numero yks");
-				output.writeInt(2);
-				output.flush();
-			}
-			else if(num == 2){
-				System.out.println("tuli numero kaksi");
-				output.writeInt(2);
-				output.flush();
-			}
-			else if(num == 3){
-				System.out.println("tuli numero kolme");
-				output.writeInt(2);
-				output.flush();
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
 	public static void summarizerService(){
-		summarizes = new Summarizer[streamInput];
+		summarizers = new Summarizer[streamInput];
 		threads = new Thread[streamInput];
 		try {
 
 			for(int i=0; i<streamInput; i++){
-				summarizes[i] = new Summarizer(3128+i);
-				threads[i] = summarizes[i];
+				summarizers[i] = new Summarizer(3128+i);
+				threads[i] = summarizers[i];
 				threads[i].start();
-				output.writeInt(summarizes[i].getPort());
+				output.writeInt(summarizers[i].getPort());
 				output.flush();
-				System.out.println("määrä: " +summarizes[i].getAmount());
-				System.out.println("summa: " + summarizes[i].getSum());
+				System.out.println("määrä: " +summarizers[i].getAmount());
+				System.out.println("summa: " + summarizers[i].getSum());
 			}
 			System.out.println("Started: " + streamInput + " summarizers." );
 		} catch (IOException e) {
@@ -205,5 +208,37 @@ public class Connections {
 			e.printStackTrace();
 		}
 
+	}
+
+	public static int readTotalSum() {
+		int total = 0;
+		for (int i = 0; i < summarizers.length; i++) {
+			total += summarizers[i].getSum();
+		}
+
+		return total;
+	}
+
+	public static int readLargestSum() {
+		int largest = 0;
+		int[] sums = new int[summarizers.length];
+		for (int i = 0; i < summarizers.length; i++) {
+			sums[i] = summarizers[i].getSum();
+		}
+		for (int j = 0; j < sums.length; j++) {
+			if (sums[j] > largest) {
+				largest = sums[j];
+			}
+		}
+
+		return largest;
+	}
+
+	public static int readIntegerAmount() {
+		int amount = 0;
+		for (int i = 0; i < summarizers.length; i++) {
+			amount += summarizers[i].getAmount();
+		}
+		return amount;
 	}
 }

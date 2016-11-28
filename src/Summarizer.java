@@ -61,7 +61,7 @@ public class Summarizer extends Thread{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} while (!isConnected());
+		} while (isConnected());
 		try {
 			cs.close();
 			ss.close();
