@@ -13,7 +13,7 @@ public class Summarizer extends Thread{
 	private int calculateSum = 0;
 	private int numberSum = 0;
 	private int temp;
-	private static InputStream iS;
+	private static InputStream is;
 
 	public Summarizer(int port){
 		this.port = port;
@@ -40,8 +40,8 @@ public class Summarizer extends Thread{
 		try{
 			ss = new ServerSocket(port);
 			cs = ss.accept();
-			iS = cs.getInputStream();
-			input = new ObjectInputStream(iS);
+			is = cs.getInputStream();
+			input = new ObjectInputStream(is);
 		}
 		catch (IOException e){
 			System.err.println(e.getMessage());
@@ -50,13 +50,13 @@ public class Summarizer extends Thread{
 		do {
 			try {
 				temp = input.readInt();
-				System.out.println("summarizer received: "+temp);
+				//System.out.println("summarizer received: "+temp);
 				if (temp == 0){
 					break;
 				}
-				calculateSum += temp;
 				numberSum++;
-
+				calculateSum += temp;
+				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

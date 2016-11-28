@@ -127,7 +127,10 @@ public class Connections {
 			}
 
 			readInputAttemps++;
-
+/*
+ * T‰m‰ rikki pit‰isi olla jos ei vastaa 5 sekunnin kuluessa niin l‰hett‰‰ -1 ja shutdown
+ * Nyt se l‰hett‰‰ -1 aina joka viide numero :D
+ */
 		} while ((streamInput < 2 || streamInput > 10) && readInputAttemps <= 5);
 
 		if (readInputAttemps >= 5) {
@@ -211,31 +214,50 @@ public class Connections {
 	}
 
 	public static int readTotalSum() {
-		int total = 0;
-		for (int i = 0; i < summarizers.length; i++) {
-			total += summarizers[i].getSum();
+			int total = 0;
+		try {
+			Thread.sleep(100);
+			for (int i = 0; i < summarizers.length; i++) {
+				total += summarizers[i].getSum();
+			} 
+		}catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0);
 		}
-
 		return total;
 	}
 
 	public static int readMaxIndex() {
 		int largest = 0;
 		int maxIndex = 0;
-		
-		for (int i = 0; i < summarizers.length; i++) {
+		try {
+			Thread.sleep(100);
+			for (int i = 0; i < summarizers.length; i++) {
 			if (summarizers[i].getSum() > largest) {
 				largest = summarizers[i].getSum();
 				maxIndex = i+1;
+				}
 			}
-		}
+		}catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0);
+		}	
 		return maxIndex;
 	}
 
 	public static int readIntegerAmount() {
 		int amount = 0;
-		for (int i = 0; i < summarizers.length; i++) {
-			amount += summarizers[i].getAmount();
+		try {
+			Thread.sleep(100);
+			for (int i = 0; i < summarizers.length; i++) {
+				amount += summarizers[i].getAmount();
+			}
+		}catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0);
 		}
 		return amount;
 	}
