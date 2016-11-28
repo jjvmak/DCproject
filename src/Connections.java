@@ -9,6 +9,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 public class Connections {
@@ -141,9 +142,10 @@ public class Connections {
 	}
 
 	/*
-	 * T‰‰ metodi on viallinen, mutta output.writeInt("t‰nne setti‰ niin toimii")
+	 *Edelleen rikki, mutta palauttelee jotain lukuja)
 	 */
-	public static void listener(){
+	public static void listener() throws SocketException{
+		ss.setSoTimeout(60000);
 		while (true) {
 			try {
 				int num = input.readInt();
@@ -158,7 +160,7 @@ public class Connections {
 				}
 				else if(num == 2){
 					System.out.println("Reading largest sums from summarizers");
-					output.writeInt(readLargestSum());
+					output.writeInt(readMaxIndex());
 					output.flush();
 				}
 				else if(num == 3){
@@ -184,8 +186,6 @@ public class Connections {
 				threads[i].start();
 				output.writeInt(summarizers[i].getPort());
 				output.flush();
-				System.out.println("m‰‰r‰: " +summarizers[i].getAmount());
-				System.out.println("summa: " + summarizers[i].getSum());
 			}
 			System.out.println("Started: " + streamInput + " summarizers." );
 		} catch (IOException e) {
@@ -219,19 +219,17 @@ public class Connections {
 		return total;
 	}
 
-	public static int readLargestSum() {
+	public static int readMaxIndex() {
 		int largest = 0;
-		int[] sums = new int[summarizers.length];
+		int maxIndex = 0;
+		
 		for (int i = 0; i < summarizers.length; i++) {
-			sums[i] = summarizers[i].getSum();
-		}
-		for (int j = 0; j < sums.length; j++) {
-			if (sums[j] > largest) {
-				largest = sums[j];
+			if (summarizers[i].getSum() > largest) {
+				largest = summarizers[i].getSum();
+				maxIndex = i;
 			}
 		}
-
-		return largest;
+		return maxIndex;
 	}
 
 	public static int readIntegerAmount() {

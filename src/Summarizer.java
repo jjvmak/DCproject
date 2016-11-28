@@ -49,8 +49,8 @@ public class Summarizer extends Thread{
 		}
 		do {
 			try {
-				System.out.println("numero: " + input.readInt());
 				temp = input.readInt();
+				System.out.println("summarizer received: "+temp);
 				if (temp == 0){
 					break;
 				}
