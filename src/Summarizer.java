@@ -44,33 +44,25 @@ public class Summarizer extends Thread{
 			input = new ObjectInputStream(is);
 		}
 		catch (IOException e){
-			System.err.println(e.getMessage());
 			System.exit(0);
 		}
 		do {
 			try {
 				temp = input.readInt();
 				if (temp == 0){
+					cs.close();
+					ss.close();
+					input.close();
 					break;
+					
 				}
 				numberSum++;
 				calculateSum += temp;
 				
 			} catch (Exception e) {
-				System.out.println("Tulee tämä run() metodista");
-				e.printStackTrace();
 				System.exit(0);
 			}
 		} while (true);
-		try {
-			cs.close();
-			ss.close();
-			input.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		this.interrupt();
 	}
 }
 
