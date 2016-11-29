@@ -33,6 +33,11 @@ public class Connections {
 	static int connectionAttemp = 01;
 	static boolean connection = false;
 
+	/**
+	 * Initializes necessary variables for UDP and TCP connection. 
+	 * Tries to connect WorkDistributor server and after five failed attempts program will shut down. 
+	 * @throws IOException
+	 */
 	public void init() throws IOException {
 		try {
 			targetAdd = InetAddress.getLocalHost();
@@ -56,7 +61,6 @@ public class Connections {
 					System.out.println("No connection to server");
 					continue;
 				}
-				
 			}
 			if(!connection) System.exit(0);;
 			setupStreams();
@@ -69,9 +73,11 @@ public class Connections {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
-
+	
+	/**
+	 * Sends datagram packet to WorkDistributor server which contains port number which will be used to TCP connection.
+	 */
 	public void sendDatagram() {
 		try {
 			System.out.println(packet);
@@ -80,6 +86,10 @@ public class Connections {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * Initializes ObjectInputStream and ObjectOutputStream.
+	 */
 	public void setupStreams(){
 		try {
 			iS = cs.getInputStream();
@@ -91,11 +101,20 @@ public class Connections {
 			e.printStackTrace();
 		}
 	}
-
+	
+	/**
+	 * Accepts incoming connection to designated socket. 
+	 * @throws IOException
+	 */
 	public void acceptTCP() throws IOException{
 		cs = ss.accept();
 	}
-
+	
+	/**
+	 * Reads the output from WorkDistributor. If timeout occurs, client will answer with -1 and after that program will shut down.
+	 * If the input is not between 2 and 10, program will shut down.
+	 * @throws Exception
+	 */
 	public void readInput() throws Exception{
 			try {
 				streamInput = input.readInt();
@@ -112,7 +131,14 @@ public class Connections {
 			System.exit(0);
 		 }
 	}
-
+	
+	/**
+	 * Listens incoming inquiries from WorkDistributor. If input receives 0, the program will shut down.
+	 * Inquiry 1. writes total sum of the received integers to the output.
+	 * Inquiry 2. writes the index number which contains largest integer to the output.
+	 * Inquiry 3. writes total number of integers received to the output.
+	 * @throws SocketException
+	 */
 	public static void listener() throws SocketException{
 		ss.setSoTimeout(60000);
 		while (true) {
@@ -148,7 +174,11 @@ public class Connections {
 			}
 		}
 	}
-
+	
+	/**
+	 * Initializes required amount of Summarizer threads with port numbers starting at 6001.
+	 * Writes port numbers to the output stream for WorkDistributor.
+	 */
 	public static void summarizerService(){
 		summarizers = new Summarizer[streamInput];
 		threads = new Thread[streamInput];
@@ -167,7 +197,10 @@ public class Connections {
 			System.exit(0);
 		}
 	}
-
+	/**
+	 * Closes all connection made and interrupts all summarizers.
+	 * After all connections are closed program will shut down.
+	 */
 	public static void closeConnections() {
 		try {
 			for (int i = 0; i < threads.length; i++) {
@@ -180,9 +213,12 @@ public class Connections {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
-
+	
+	/**
+	 * Reads total sum from the summarizers.
+	 * @return
+	 */
 	public static int readTotalSum() {
 			int total = 0;
 		try {
@@ -196,7 +232,11 @@ public class Connections {
 		}
 		return total;
 	}
-
+	
+	/**
+	 * Reads the index which summarizer has largest sum.
+	 * @return
+	 */
 	public static int readMaxIndex() {
 		int largest = 0;
 		int maxIndex = 0;
@@ -214,7 +254,11 @@ public class Connections {
 		}	
 		return maxIndex;
 	}
-
+	
+	/**
+	 * Reads the total sum of integers received.
+	 * @return
+	 */
 	public static int readIntegerAmount() {
 		int amount = 0;
 		try {
