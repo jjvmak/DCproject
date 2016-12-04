@@ -13,6 +13,11 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+/*
+ * L‰hett‰‰ datagrampaketin WorkDistributor serville, jonka j‰lkeen avaa TCP-yhteyden.
+ * Alustaa ja k‰ynnist‰‰ vaaditun m‰‰r‰n summauspalveluita.
+ * Kuuntelee serverilt‰ saapuvia kyseilyit‰ vastaten niihin.
+ */
 public class Connections {
 
 	static int targetPort;
@@ -39,21 +44,21 @@ public class Connections {
 	 * @throws IOException
 	 */
 	public void init() throws IOException {
-		try {
-			targetAdd = InetAddress.getLocalHost();
-			targetPort = 3126;
+		try { 
+			targetAdd = InetAddress.getLocalHost(); //Kohdeosoitteeseen alustetaan localhost osoite.
+			targetPort = 3126; 
 			portNumber = "6000";
-			data = portNumber.getBytes();
-			packet = new DatagramPacket(data, data.length, targetAdd, 3126);
-			datagramSocket = new DatagramSocket();
-			ss = new ServerSocket(6000);
+			data = portNumber.getBytes(); //Enkoodataan merkkijono biteiksi datagrampakettia varten.
+			packet = new DatagramPacket(data, data.length, targetAdd, 3126); //Muodostetaan datagrampaketti.
+			datagramSocket = new DatagramSocket(); //Muodostetaan datagramsoketti.
+			ss = new ServerSocket(6000); //Muodostetaan serversoketti ja annetaan parametriksi porttinumero 6000.
 
-			while(connectionAttemp <= 5){
+			while(connectionAttemp <= 5){ 
 				System.out.println("Sending datagram packet to server. Attemp: "+connectionAttemp);
-				sendDatagram();
+				sendDatagram(); //L‰hetet‰‰n datagrampaketti serverille.
 				try {
-					ss.setSoTimeout(5000);
-					acceptTCP();
+					ss.setSoTimeout(5000); //Asetetaan serverisoketin timeout.
+					acceptTCP(); //Hyv‰ksyt‰‰n TCP-yhteys k‰ytt‰en kyseist‰ metodia.
 					connection = true;
 					if(cs.isConnected()) break;
 				} catch (SocketTimeoutException e) {
@@ -62,11 +67,12 @@ public class Connections {
 					continue;
 				}
 			}
-			if(!connection) System.exit(0);;
-			setupStreams();
-			readInput();
-			summarizerService();
-			listener();
+			if(!connection) System.exit(0);
+
+			setupStreams(); //Alustetaan input- ja outputstreamit.
+			readInput(); //Luetaan tiedostovirtaa inputstreamista.
+			summarizerService(); //Luodaan ja k‰ynnistet‰‰n summaajapalvelut.
+			listener(); //K‰ynnistet‰‰n kuuntelu serverin testej‰ varten.
 
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -74,19 +80,19 @@ public class Connections {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Sends datagram packet to WorkDistributor server which contains port number which will be used to TCP connection.
 	 */
 	public void sendDatagram() {
 		try {
 			System.out.println(packet);
-			datagramSocket.send(packet);
+			datagramSocket.send(packet); //L‰hett‰‰ datagrampaketin serverille.
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Initializes ObjectInputStream and ObjectOutputStream.
 	 */
@@ -94,44 +100,45 @@ public class Connections {
 		try {
 			iS = cs.getInputStream();
 			oS = cs.getOutputStream();
-			output = new ObjectOutputStream(oS);
-			input = new ObjectInputStream(iS);
+			output = new ObjectOutputStream(oS); //Muodostetaan ja alustetaan outputstream. Annetaan parametriksi socketilta saatu output.
+			input = new ObjectInputStream(iS); //Muodostetaan ja alustetaan inputstream. Annetaan parametriksi socketilta saatu input.
 			output.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Accepts incoming connection to designated socket. 
 	 * @throws IOException
 	 */
 	public void acceptTCP() throws IOException{
-		cs = ss.accept();
+		cs = ss.accept(); //Hyv‰ksyt‰‰n TCP-yhteys.
 	}
-	
+
 	/**
 	 * Reads the output from WorkDistributor. If timeout occurs, client will answer with -1 and after that program will shut down.
 	 * If the input is not between 2 and 10, program will shut down.
 	 * @throws Exception
 	 */
 	public void readInput() throws Exception{
-			try {
-				streamInput = input.readInt();
-				System.out.println("Reading input. Received: "+streamInput);
+		try {
+			streamInput = input.readInt(); //Luetaan serverilt‰ saapuvaa tiedostovirtaa.
+			System.out.println("Reading input. Received: "+streamInput);
 
-			}catch (SocketTimeoutException e){
-				output.writeInt(-1); 
-				output.flush();
-				System.exit(0);		
-			}catch (IOException e) {
-				e.printStackTrace();
-			}
-		 if(streamInput < 2 || streamInput > 10){
+		}catch (SocketTimeoutException e){
+			//Timeoutin sattuessa kirjoitetaan tiedostovirtaan -1 ja suljetaan ohjelma.
+			output.writeInt(-1); 
+			output.flush();
+			System.exit(0);		
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+		if(streamInput < 2 || streamInput > 10){
 			System.exit(0);
-		 }
+		}
 	}
-	
+
 	/**
 	 * Listens incoming inquiries from WorkDistributor. If input receives 0, the program will shut down.
 	 * Inquiry 1. writes total sum of the received integers to the output.
@@ -140,7 +147,8 @@ public class Connections {
 	 * @throws SocketException
 	 */
 	public static void listener() throws SocketException{
-		ss.setSoTimeout(60000);
+		//Metodi kuuntelee serverilt‰ tiedostovirtaan saapuvia kyselyit‰.
+		ss.setSoTimeout(60000); //Asetetaan serversoketin timeout.
 		while (true) {
 			try {
 				int num = input.readInt();
@@ -174,20 +182,21 @@ public class Connections {
 			}
 		}
 	}
-	
+
 	/**
 	 * Initializes required amount of Summarizer threads with port numbers starting at 6001.
 	 * Writes port numbers to the output stream for WorkDistributor.
 	 */
 	public static void summarizerService(){
-		summarizers = new Summarizer[streamInput];
+		summarizers = new Summarizer[streamInput]; 
 		threads = new Thread[streamInput];
 		try {
-
+			
+			//Luodaan ja alustetaan serverin vaatima m‰‰r‰ summauspalveluita.
 			for(int i=0; i<streamInput; i++){
 				summarizers[i] = new Summarizer(6001+i);
 				threads[i] = summarizers[i];
-				threads[i].start();
+				threads[i].start(); //K‰ynnistet‰‰n summauspalvelut.
 				output.writeInt(summarizers[i].getPort());
 				output.flush();
 			}
@@ -202,6 +211,7 @@ public class Connections {
 	 * After all connections are closed program will shut down.
 	 */
 	public static void closeConnections() {
+		//Metodi sulkee kaikki k‰ynniss‰ olevat summauspalvelut sek‰ UDP- ja TCP-yhteydet.
 		try {
 			for (int i = 0; i < threads.length; i++) {
 				threads[i].interrupt();
@@ -214,15 +224,17 @@ public class Connections {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Reads total sum from the summarizers.
 	 * @return
 	 */
 	public static int readTotalSum() {
-			int total = 0;
+		//Lukee ja palauttaa yhteenlasketun summan kaikilta summauspalveluilta.
+		int total = 0;
 		try {
 			Thread.sleep(100);
+			//K‰yd‰‰n l‰pi summauspalveluita sis‰lt‰v‰ taulukko ja lasketaan total muuttujaan summa.
 			for (int i = 0; i < summarizers.length; i++) {
 				total += summarizers[i].getSum();
 			} 
@@ -232,20 +244,24 @@ public class Connections {
 		}
 		return total;
 	}
-	
+
 	/**
 	 * Reads the index which summarizer has largest sum.
 	 * @return
 	 */
 	public static int readMaxIndex() {
+		//Etsit‰‰n ja palautetaan taulukon indeksi, jossa summauspalvelulla on suurin summa.
 		int largest = 0;
 		int maxIndex = 0;
 		try {
 			Thread.sleep(100);
+			/*K‰yd‰‰n summauspalveluja sis‰lt‰v‰ taulukko l‰pi ja tallennetaan maxIndex muuttujan suurimman indeksi numero.
+			 *WorkDistributo serverin indeksi alkavat 1:st‰, joten palautetaan maxIndex + 1.
+			 */
 			for (int i = 0; i < summarizers.length; i++) {
-			if (summarizers[i].getSum() > largest) {
-				largest = summarizers[i].getSum();
-				maxIndex = i+1;
+				if (summarizers[i].getSum() > largest) {
+					largest = summarizers[i].getSum();
+					maxIndex = i+1;
 				}
 			}
 		}catch (InterruptedException e) {
@@ -254,12 +270,13 @@ public class Connections {
 		}	
 		return maxIndex;
 	}
-	
+
 	/**
 	 * Reads the total sum of integers received.
 	 * @return
 	 */
 	public static int readIntegerAmount() {
+		//Luetaan yhteenlaskettu lukum‰‰r‰, paljonko summauspalvelut ovat saaneet kokonaislukuja summattavaksi.
 		int amount = 0;
 		try {
 			Thread.sleep(100);
